@@ -40,7 +40,7 @@ export function RoutineCard({ routine, pickedTaskIds, onPick }: Props) {
               >
                 {picked ? "✓" : "+"}
               </span>
-              <span className="truncate text-[12.5px]">{task.title}</span>
+              <span className="line-clamp-2 text-[12.5px] leading-snug">{task.title}</span>
             </button>
           );
         })}
