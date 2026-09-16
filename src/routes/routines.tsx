@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { TabBar } from "@/components/TabBar";
 import { hueDot, hueRing } from "@/lib/hues";
 import {
   HUES,
@@ -48,7 +49,7 @@ function Library() {
       <div className="pointer-events-none absolute -left-12 -top-12 size-56 rounded-full bg-hue-teal/25 blur-3xl" />
       <div className="pointer-events-none absolute -right-10 top-52 size-56 rounded-full bg-hue-rose/25 blur-3xl" />
 
-      <div className="relative mx-auto max-w-[460px] px-5 pb-16 pt-8">
+      <div className="relative mx-auto max-w-[460px] px-5 pb-32 pt-8">
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -196,6 +197,8 @@ function Library() {
           ))}
         </div>
       </div>
+
+      <TabBar />
     </div>
   );
 }

@@ -117,7 +117,11 @@ export function hydrate() {
     if (raw) {
       const parsed = JSON.parse(raw) as RitualState;
       if (parsed?.routines) {
-        const base: RitualState = { focus: [], today: [], ...parsed };
+        const base: RitualState = {
+          ...parsed,
+          focus: parsed.focus ?? [],
+          today: parsed.today ?? [],
+        };
         state =
           base.day === todayKey() ? base : { ...base, day: todayKey(), today: [], focus: [] };
       }
@@ -146,7 +150,7 @@ export function useRitual() {
 function move<T>(list: T[], from: number, to: number): T[] {
   if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) return list;
   const next = list.slice();
-  const [item] = next.splice(from, 1);
+  const item = next.splice(from, 1)[0] as T;
   next.splice(to, 0, item);
   return next;
 }
