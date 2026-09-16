@@ -1,10 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Crosshair, LayoutGrid, Settings, Sun } from "lucide-react";
+import { Compass, Crosshair, Settings, Sun } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Today", Icon: Sun },
   { to: "/focus", label: "Focus", Icon: Crosshair },
-  { to: "/routines", label: "Routines", Icon: LayoutGrid },
+  { to: "/clarity", label: "Clarity", Icon: Compass },
   { to: "/settings", label: "Settings", Icon: Settings },
 ] as const;
 
