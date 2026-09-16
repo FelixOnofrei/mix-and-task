@@ -2,13 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { RoutineCard } from "@/components/RoutineCard";
+import { TabBar } from "@/components/TabBar";
+import { TaskList } from "@/components/TaskList";
 import { hueDot, hueTint } from "@/lib/hues";
 import {
+  FOCUS_LIMIT,
   addCustomTask,
   addFromRoutine,
+  clearDone,
+  cycleStatus,
   hydrate,
   removeTask,
-  toggleTask,
+  reorderToday,
+  toggleFocus,
   useRitual,
 } from "@/lib/ritual-store";
 
@@ -32,15 +38,16 @@ export const Route = createFileRoute("/")({
 });
 
 function Today() {
-  const { routines, today } = useRitual();
+  const { routines, today, focus } = useRitual();
   const [draft, setDraft] = useState("");
 
   useEffect(() => {
     hydrate();
   }, []);
 
-  const done = today.filter((t) => t.done).length;
-  const pickedTaskIds = today.map((t) => t.sourceTaskId).filter(Boolean) as string[];
+  const open = today.filter((t) => t.status !== "done");
+  const done = today.filter((t) => t.status === "done");
+  const pickedTaskIds = open.map((t) => t.sourceTaskId).filter(Boolean) as string[];
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
@@ -48,72 +55,33 @@ function Today() {
       <div className="pointer-events-none absolute -left-16 top-40 size-56 rounded-full bg-hue-blue/25 blur-3xl" />
       <div className="pointer-events-none absolute bottom-10 right-6 size-40 rounded-full bg-hue-violet/25 blur-3xl" />
 
-      <div className="relative mx-auto max-w-[460px] px-5 pb-16 pt-8">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              Today
-            </p>
-            <h1 className="mt-1 max-w-[16ch] text-balance font-display text-3xl leading-tight">
-              A few things, on the table.
-            </h1>
-          </div>
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-glass text-[10px] font-medium text-muted-foreground ring-1 ring-border">
-            {done}/{today.length}
-          </span>
+      <div className="relative mx-auto max-w-[460px] px-5 pb-32 pt-8">
+        <header>
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Today
+          </p>
+          <h1 className="mt-1 max-w-[16ch] text-balance font-display text-3xl leading-tight">
+            A few things, on the table.
+          </h1>
         </header>
 
         <div className="mt-6 flex animate-settle items-center gap-2 text-[13px] text-muted-foreground">
           <span className="size-1.5 rounded-full bg-hue-teal" />
-          {today.length === 0
-            ? "Nothing yet — pick a task below, no rush"
-            : `${done} done · ${today.length - done} to go · no rush`}
+          {open.length === 0
+            ? "Nothing open — pick a task below, no rush"
+            : `${open.length} to go · no rush`}
         </div>
 
         <section className="mt-4 rounded-3xl p-3 ring-1 ring-border glass-panel">
-          {today.map((task, i) => (
-            <div
-              key={task.id}
-              className="group flex animate-slidein items-center gap-3 rounded-2xl px-2 py-3"
-              style={{ animationDelay: `${i * 60}ms` }}
-            >
-              <span
-                className={`size-2.5 shrink-0 rounded-full ${
-                  task.hue ? hueDot[task.hue] : "bg-background ring-1 ring-border"
-                }`}
-              />
-              <button
-                type="button"
-                onClick={() => toggleTask(task.id)}
-                aria-label={task.done ? `Undo ${task.title}` : `Complete ${task.title}`}
-                className={`grid size-6 shrink-0 place-items-center rounded-full text-xs font-medium ring-1 ring-input transition-colors ${
-                  task.done ? "bg-primary text-primary-foreground" : "bg-card"
-                }`}
-              >
-                {task.done ? "✓" : ""}
-              </button>
-              <div className="min-w-0 flex-1" onClick={() => toggleTask(task.id)}>
-                <p
-                  className={`text-[15px] font-medium leading-snug ${
-                    task.done ? "text-foreground/40 line-through" : ""
-                  }`}
-                >
-                  {task.title}
-                </p>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {task.routineName ? `from ${task.routineName}` : "custom"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => removeTask(task.id)}
-                aria-label={`Remove ${task.title}`}
-                className="shrink-0 rounded-full px-2 py-1 text-[15px] leading-none text-muted-foreground opacity-0 transition-opacity hover:bg-secondary group-hover:opacity-100"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+          <TaskList
+            tasks={open}
+            focusIds={focus}
+            focusDisabled={focus.length >= FOCUS_LIMIT}
+            onCycle={cycleStatus}
+            onDelete={removeTask}
+            onToggleFocus={toggleFocus}
+            onReorder={reorderToday}
+          />
 
           <form
             onSubmit={(e) => {
@@ -121,7 +89,7 @@ function Today() {
               addCustomTask(draft);
               setDraft("");
             }}
-            className="mt-1 flex items-center gap-2 rounded-2xl bg-glass px-2 py-2 ring-1 ring-border"
+            className="mt-2 flex items-center gap-2 rounded-2xl bg-glass px-2 py-2 ring-1 ring-border"
           >
             <span className="text-lg leading-none text-muted-foreground">+</span>
             <input
@@ -177,10 +145,51 @@ function Today() {
           ))}
         </div>
 
+        {done.length > 0 && (
+          <section className="mt-4 rounded-3xl p-3 ring-1 ring-border glass-panel">
+            <div className="flex items-center justify-between px-2 pb-2">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                Done · {done.length}
+              </p>
+              <button
+                type="button"
+                onClick={clearDone}
+                className="text-[12px] font-medium text-muted-foreground"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="space-y-1">
+              {done.map((task) => (
+                <div key={task.id} className="flex items-center gap-2.5 px-2 py-2">
+                  <span
+                    className={`size-2 shrink-0 rounded-full ${
+                      task.hue ? hueDot[task.hue] : "bg-foreground/20"
+                    }`}
+                  />
+                  <p className="min-w-0 flex-1 truncate text-[13.5px] text-foreground/45 line-through">
+                    {task.title}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => cycleStatus(task.id)}
+                    className="shrink-0 text-[11px] text-muted-foreground"
+                  >
+                    Undo
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <p className="px-2 pb-2 pt-4 text-[11px] leading-snug text-muted-foreground/80">
-          Tap a task to slide it into Today. Leave the rest on the shelf.
+          Tap a task to move it through to-do → in progress → done. Drag to reorder, swipe right to
+          delete.
         </p>
       </div>
+
+      <TabBar />
     </div>
   );
 }
