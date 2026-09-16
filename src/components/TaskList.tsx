@@ -37,7 +37,7 @@ export function TaskList({
       for (const row of Array.from(rows)) {
         const rect = row.getBoundingClientRect();
         if (ev.clientY >= rect.top && ev.clientY <= rect.bottom) {
-          const overId = row.dataset.rowId;
+          const overId = row.dataset['rowId'];
           if (overId && overId !== id) onReorder(id, overId);
           break;
         }
@@ -61,7 +61,7 @@ export function TaskList({
           key={task.id}
           task={task}
           focused={focusIds.includes(task.id)}
-          focusDisabled={focusDisabled}
+          focusDisabled={!!focusDisabled}
           dragging={draggingId === task.id}
           onCycle={onCycle}
           onDelete={onDelete}

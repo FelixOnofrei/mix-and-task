@@ -7,7 +7,7 @@ import type { TodayTask } from "@/lib/ritual-store";
 type Props = {
   task: TodayTask;
   focused: boolean;
-  focusDisabled?: boolean;
+  focusDisabled: boolean;
   dragging?: boolean;
   onCycle: (id: string) => void;
   onDelete: (id: string) => void;
